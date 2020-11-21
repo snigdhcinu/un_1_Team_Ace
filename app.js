@@ -8,40 +8,40 @@ const app=express();
 
 const port=3000; // Add dynamic port no. ASAP, to avoid unexpected behaviour.
 
-// OTP Generator
-var otpGenerator = require('otp-generator')
+// // OTP Generator
+// var otpGenerator = require('otp-generator')
  
-let otp = otpGenerator.generate(6, { upperCase: false, specialChars: false });
+// let otp = otpGenerator.generate(6, { upperCase: false, specialChars: false });
 
-// Nodemailer
-  // Initializing stuff
-let transporter = nodemailer.createTransport({
-  service:'gmail',
-    auth: {
-      user:process.env.SENDER, // generated ethereal user
-      pass:process.env.SENDER_PASSWORD , // generated ethereal password
-    }
-});
-  // Sending mail
+// // Nodemailer
+//   // Initializing stuff
+// let transporter = nodemailer.createTransport({
+//   service:'gmail',
+//     auth: {
+//       user:process.env.SENDER, // generated ethereal user
+//       pass:process.env.SENDER_PASSWORD , // generated ethereal password
+//     }
+// });
+//   // Sending mail
 
-  let data={
-    from:process.env.SENDER,
+//   let data={
+//     from:process.env.SENDER,
 
-    // Receiver of email, given by chatbot.
+//     // Receiver of email, given by chatbot.
 
-    to:process.env.RECEIVER,
-    subject:'Verification OTP',
-    text:`Hi, your verification OTP is :- ${otp} please enter this into the chat, to verify yourself.`
-  }
-  transporter.sendMail(data, function(err,info){
-    if(err){
-      console.log(err)
-    }
-    else{
-      console.log('Message was sent successfully');
-      console.log(info)
-    }
-  })
+//     to:process.env.RECEIVER,
+//     subject:'Verification OTP',
+//     text:`Hi, your verification OTP is :- ${otp} please enter this into the chat, to verify yourself.`
+//   }
+//   transporter.sendMail(data, function(err,info){
+//     if(err){
+//       console.log(err)
+//     }
+//     else{
+//       console.log('Message was sent successfully');
+//       console.log(info)
+//     }
+//   })
 
 
   // chatbot logic
@@ -69,6 +69,7 @@ app.use(function (req, res, next) {
 
 app.post('/send-msg',(req,res)=>{
   runSample(req.body.MSG).then(data=>{
+    console.log(data);
     res.send({Reply:data})
   })
 })
