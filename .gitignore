@@ -14,3 +14,5 @@ jspm_packages/
 .env
 .env.test
 
+# Dialogflow Agent Credentials
+Jarvis-e156e690921e.json
