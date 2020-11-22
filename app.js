@@ -4,6 +4,7 @@ const uuid = require('uuid');
 const express=require('express');
 const bodyParser=require('body-parser');
 const nodemailer=require('nodemailer');
+const mongoose=require('mongoose');
 const app=express();
 
 const port=3000; // Add dynamic port no. ASAP, to avoid unexpected behaviour.
@@ -16,6 +17,16 @@ const port=3000; // Add dynamic port no. ASAP, to avoid unexpected behaviour.
 app.use(bodyParser.urlencoded({
   extended:false
 }));
+
+mongoose.connect("mongodb://localhost:27017/visitorsDB",{useNewUrlParser:true,useUnifiedTopology: true});
+
+const visitorSchema = new mongoose.Schema({
+  name:String,
+  queries:[String]
+})
+
+const Visitor = mongoose.model('Visitor',visitorSchema);
+
 
 
 app.use(function (req, res, next) {
@@ -36,6 +47,7 @@ var otpGenerator = require('otp-generator')
 let otp = otpGenerator.generate(6, { upperCase: false, specialChars: false });
 
 let transporter;
+let username;
 
 app.post('/send-msg',(req,res)=>{
 
@@ -81,6 +93,22 @@ app.post('/send-msg',(req,res)=>{
     runSample2(req.body.MSG).then(data=>{
       // console.log(data);
 
+      Visitor.find({name:username},function(err,visitor){
+        if(!err){
+          if(visitor != null){
+            visitor.queries = data[1];
+          }
+          else{
+            const visitor = new Visitor({
+              name:username,
+              queries:[data[1]]
+            })
+            visitor.save();
+          }
+        }
+      })
+
+
       
 
       res.send({Reply:data})
@@ -89,6 +117,9 @@ app.post('/send-msg',(req,res)=>{
 })
 
   //  EXECUTION FUNCTIONS HERE.
+
+
+// Before Authentication 
 
 
 async function runSample1(msg,projectId = 'jarvis-itwxkb') {
@@ -127,6 +158,7 @@ async function runSample1(msg,projectId = 'jarvis-itwxkb') {
 
     if(result.intent.displayName == 'greet - getName - getEmail'){
       let detectedEmail = JSON.stringify(result.parameters.fields.uemail.stringValue)
+      username = detectedEmail;
       // console.log(`detected email is ${detectedEmail}`)
       // Sending mail
 
@@ -164,17 +196,17 @@ async function runSample1(msg,projectId = 'jarvis-itwxkb') {
   }
   // console.log('_________________________________')
 
-
- // 'Thanks, sending verification OTP to ron123@ymail.com, input that here.'
-
   return [result.fulfillmentText,result.intent.displayName];
 }
 
-async function runSample2(msg,projectId = 'jarvis-itwxkb') {
+
+  // After authentication
+
+async function runSample2(msg,projectId = 'alpha-jwfg') {
 
   // Create a new session
   const sessionClient = new dialogflow.SessionsClient({
-    keyFilename: __dirname+"/Jarvis-e156e690921e.json"
+    keyFilename: __dirname+"/alpha-jwfg-88d178768095.json"
   });
   const sessionPath = sessionClient.projectAgentSessionPath(projectId, sessionId);
 
@@ -197,25 +229,10 @@ async function runSample2(msg,projectId = 'jarvis-itwxkb') {
   const responses = await sessionClient.detectIntent(request);
   // console.log('Detected intent');
   const result = responses[0].queryResult;
-  // console.log(`  Query: ${result.queryText}`);
-  
-    if(result.intent.displayName == 'greet - getName'){
-      let detectedName = JSON.stringify(result.parameters.fields.uname.stringValue)
-      // console.log(`detected name is ${detectedName}`)
-    }
-
-    if(result.intent.displayName == 'greet - getName - getEmail'){
-      let detectedEmail = JSON.stringify(result.parameters.fields.uemail.stringValue)
-      // console.log(`detected email is ${detectedEmail}`)
-    }
-
-    if(result.intent.displayName == 'greet - getName - getEmail - getOtp'){
-      inputOTP = JSON.stringify(result.parameters.fields.otp.stringValue)
-      // console.log(`detected email is ${detectedEmail}`)
-    }
+  console.log(`  Query: ${result.queryText}`);
 
 
-  // console.log(`  Response: ${result.fulfillmentText}`);
+  console.log(`  Response: ${result.fulfillmentText}`);
   if (result.intent) {
     console.log(`  Intent: ${result.intent.displayName}`);
   } else {
@@ -226,7 +243,9 @@ async function runSample2(msg,projectId = 'jarvis-itwxkb') {
 
  // 'Thanks, sending verification OTP to ron123@ymail.com, input that here.'
 
-  return [result.fulfillmentText,result.intent.displayName];
+
+
+  return [result.fulfillmentText,result.queryText];
 }
 
 
